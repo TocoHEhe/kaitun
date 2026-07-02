@@ -289,7 +289,7 @@ end
 local blur = Instance.new("BlurEffect")
 blur.Name = "Toco Blur"
 blur.Parent = Lighting
-blur.Enabled = not getgenv().SettingFarm["Hide UI"]  -- UI mở thì bật blur, đóng thì tắt hẳn
+blur.Enabled = not getgenv().SettingFarm["Hide UI"]
 
 -- CoinCard UI
 local CoinCard = Instance.new("ScreenGui")
@@ -453,7 +453,6 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1.0
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
 ImageLabel.Size = UDim2.new(0, 40, 0, 40)
--- Đã thay avatar icon bằng link Discord (yêu cầu tải lên Roblox nếu muốn hiển thị)
 ImageLabel.Image = "https://cdn.discordapp.com/attachments/1351524652316491786/1515523427316797621/6197394b55c614b9b314b920d1adda0b.png?ex=6a470bae&is=6a45ba2e&hm=184b07643e4ab17a485e1838109d8e3b38b26a815e76021ea79303cdb3afd0ae&"
 
 TextButton.Parent = ditnhauko
@@ -488,7 +487,7 @@ TextButton.MouseButton1Down:Connect(function()
     faded = not faded
     
     CoinCard.Enabled = not CoinCard.Enabled
-    blur.Enabled = CoinCard.Enabled   -- dùng Enable thay vì Size để tắt hẳn
+    blur.Enabled = CoinCard.Enabled
     getgenv().SettingFarm["Hide UI"] = not CoinCard.Enabled
 end)
 
@@ -633,12 +632,14 @@ task.spawn(function()
     end
 end)
 
--- ========== TỰ ĐỘNG KẾT NỐI LẠI KHI BỊ KICK ==========
-game:GetService("Players").LocalPlayer.OnRemoving:Connect(function()
-    game:GetService("TeleportService"):Teleport(game.PlaceId)
+-- ========== TỰ ĐỘNG VÀO LẠI GAME KHI BỊ KICK ==========
+Players.PlayerRemoving:Connect(function(leavingPlayer)
+    if leavingPlayer == LocalPlayer then
+        TeleportService:Teleport(PlaceId)
+    end
 end)
 
--- Lệnh dừng (không in)
+-- Lệnh dừng
 _G.stop = function()
     _G.stop = nil
     error("Đã dừng script")
