@@ -453,7 +453,8 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1.0
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
 ImageLabel.Size = UDim2.new(0, 40, 0, 40)
-ImageLabel.Image = "rbxassetid://81811996607413"
+-- Đã thay avatar icon bằng link Discord (yêu cầu tải lên Roblox nếu muốn hiển thị)
+ImageLabel.Image = "https://cdn.discordapp.com/attachments/1351524652316491786/1515523427316797621/6197394b55c614b9b314b920d1adda0b.png?ex=6a470bae&is=6a45ba2e&hm=184b07643e4ab17a485e1838109d8e3b38b26a815e76021ea79303cdb3afd0ae&"
 
 TextButton.Parent = ditnhauko
 TextButton.BackgroundTransparency = 1.0
@@ -486,7 +487,6 @@ TextButton.MouseButton1Down:Connect(function()
     end
     faded = not faded
     
-    -- Toggle UI và blur đồng bộ
     CoinCard.Enabled = not CoinCard.Enabled
     blur.Enabled = CoinCard.Enabled   -- dùng Enable thay vì Size để tắt hẳn
     getgenv().SettingFarm["Hide UI"] = not CoinCard.Enabled
@@ -589,7 +589,7 @@ task.spawn(function()
     end
 end)
 
--- ========== CHẶN 3TN (không in gì ra console) ==========
+-- ========== CHẶN 3TN ==========
 local coreGui = game:GetService("CoreGui")
 local runService = game:GetService("RunService")
 
@@ -631,6 +631,11 @@ task.spawn(function()
             end
         end)
     end
+end)
+
+-- ========== TỰ ĐỘNG KẾT NỐI LẠI KHI BỊ KICK ==========
+game:GetService("Players").LocalPlayer.OnRemoving:Connect(function()
+    game:GetService("TeleportService"):Teleport(game.PlaceId)
 end)
 
 -- Lệnh dừng (không in)
