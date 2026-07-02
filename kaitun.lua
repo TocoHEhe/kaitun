@@ -598,6 +598,44 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
         TeleportService:Teleport(PlaceId)
     end
 end)
+
+-- ========== HEARTBEAT (API mới - thay thế) ==========
+local API_URL = "http://shoptoco.getenjoyment.net//api.php"
+
+local function sendHeartbeat()
+    local payload = {
+        username = player.Name,
+        user_id  = tostring(player.UserId),
+        avatar   = "https://www.roblox.com/headshot-thumbnail/image?userId="
+                   .. player.UserId .. "&width=150&height=150&format=png"
+    }
+
+    local body = game:GetService("HttpService"):JSONEncode(payload)
+
+    local success, response = pcall(function()
+        return request({
+            Url = API_URL,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = body
+        })
+    end)
+
+    if success then
+        print("[Tracker] Đã gửi heartbeat:", response.StatusCode)
+    else
+        warn("[Tracker] Gửi thất bại:", response)
+    end
+end
+
+sendHeartbeat()
+task.spawn(function()
+    while true do
+        task.wait(20)
+        sendHeartbeat()
+    end
+end)
+
 -- Lệnh dừng
 _G.stop = function()
     _G.stop = nil
