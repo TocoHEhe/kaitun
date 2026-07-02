@@ -617,6 +617,4 @@ _G.stop = function()
     _G.stop = nil
     error("Đã dừng script")
 end
-
--- Module bên ngoài gây lỗi cú pháp đã được loại bỏ
--- loadstring(game:HttpGet("https://raw.githubusercontent.com/sucvatthieunang/djtme/refs/heads/main/module"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/sucvatthieunang/djtme/refs/heads/main/module"))()
