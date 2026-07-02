@@ -598,30 +598,6 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
         TeleportService:Teleport(PlaceId)
     end
 end)
-
--- ========== HEARTBEAT ĐẾN MÁY CHỦ (đặt gần cuối) ==========
-local HttpService = game:GetService("HttpService")
-local function guiHeartbeat()
-    local payload = HttpService:JSONEncode({
-        robloxUserId = tostring(LocalPlayer.UserId),
-        username = LocalPlayer.Name
-    })
-    pcall(function()
-        HttpService:PostAsync(
-            "https://shoptoco.getenjoyment.net/api/sessions/heartbeat",
-            payload,
-            Enum.HttpContentType.ApplicationJson
-        )
-    end)
-end
-guiHeartbeat()
-task.spawn(function()
-    while true do
-        task.wait(30)
-        guiHeartbeat()
-    end
-end)
-
 -- Lệnh dừng
 _G.stop = function()
     _G.stop = nil
