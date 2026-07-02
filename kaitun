@@ -114,9 +114,11 @@ task.spawn(function()
                 if buttons then
                     local fastMode = buttons:FindFirstChild("FastModeButton")
                     if fastMode then
-                        for _, conn in pairs(getconnections(fastMode.Activated)) do
-                            conn.Function()
-                        end
+                        pcall(function()
+                            for _, conn in pairs(getconnections(fastMode.Activated)) do
+                                conn.Function()
+                            end
+                        end)
                     end
                 end
             end
@@ -194,9 +196,10 @@ task.spawn(function()
             Lighting.FogEnd = 9000000000
             Lighting.Brightness = 0
             
-            if settings and settings().Rendering then
-                settings().Rendering.QualityLevel = "Level01"
-                settings().Rendering.GraphicsMode = "NoGraphics"
+            local settings = mainGui and mainGui:FindFirstChild("Settings")
+            if settings and settings:FindFirstChild("Rendering") then
+                settings.Rendering.QualityLevel = "Level01"
+                settings.Rendering.GraphicsMode = "NoGraphics"
             end
             
             for _, obj in pairs(Workspace:GetDescendants()) do
@@ -269,8 +272,7 @@ task.spawn(function()
 end)
 
 -- ========== XÓA UI CŨ ==========
-local OldGUIs = {CoreGui:FindFirstChild("Status"), CoreGui:FindFirstChild("
-Sigma Hub Btn"), CoreGui:FindFirstChild("CoinCard")}
+local OldGUIs = {CoreGui:FindFirstChild("Status"), CoreGui:FindFirstChild("Sigma Hub Btn"), CoreGui:FindFirstChild("CoinCard")}
 for _, v in pairs(OldGUIs) do if v then v:Destroy() end end
 
 -- ========== MAIN UI ==========
