@@ -42,16 +42,6 @@ getgenv().Configs["FPS Booster"] = false
 getgenv().SettingFarm = getgenv().SettingFarm or {}
 getgenv().SettingFarm["Hide UI"] = false
 
--- ========== ĐỊNH NGHĨA HÀM GHÉP CHUỖI ==========
-local function concatTable(t)
-    return table.concat(t, "")
-end
-
--- Chỉ thông báo lỗi, không thông báo thành công
-local function logError(msg)
-    warn("[TocoKaiTun] ERROR:", msg)
-end
-
 -- ========== AUTO TEAM ==========
 local function autoTeam()
     local player = game.Players.LocalPlayer
@@ -98,7 +88,7 @@ local VirtualUser = game:service("VirtualUser")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 
--- ========== FPS BOOSTER (giữ nguyên nhưng bọc lỗi) ==========
+-- ========== FPS BOOSTER ==========
 task.spawn(function()
     if getgenv().Configs["FPS Booster"] then
         pcall(function()
@@ -295,11 +285,11 @@ local function GetInvMap()
     return map
 end
 
--- Blur Effect (tím nhẹ)
+-- Blur Effect (ẩn/hiện theo UI)
 local blur = Instance.new("BlurEffect")
 blur.Name = "Toco Blur"
 blur.Parent = Lighting
-blur.Size = getgenv().SettingFarm["Hide UI"] and 0 or 24
+blur.Enabled = not getgenv().SettingFarm["Hide UI"]  -- UI mở thì bật blur, đóng thì tắt hẳn
 
 -- CoinCard UI
 local CoinCard = Instance.new("ScreenGui")
@@ -348,7 +338,6 @@ Main.Size = UDim2.new(1, -47, 1, -47)
 UICornerMain.CornerRadius = UDim.new(0, 5)
 UICornerMain.Parent = Main
 
--- Màu tím (purple)
 UIStrokeMain.Color = Color3.fromRGB(150, 0, 150)
 UIStrokeMain.Thickness = 2.5
 UIStrokeMain.Parent = Main
@@ -497,11 +486,9 @@ TextButton.MouseButton1Down:Connect(function()
     end
     faded = not faded
     
-    -- Đảo trạng thái UI
+    -- Toggle UI và blur đồng bộ
     CoinCard.Enabled = not CoinCard.Enabled
-    -- Cập nhật blur đồng bộ: nếu GUI bị ẩn (Enabled = false) thì blur = 0, ngược lại blur = 24
-    blur.Size = CoinCard.Enabled and 24 or 0
-    -- Lưu vào config
+    blur.Enabled = CoinCard.Enabled   -- dùng Enable thay vì Size để tắt hẳn
     getgenv().SettingFarm["Hide UI"] = not CoinCard.Enabled
 end)
 
@@ -602,7 +589,7 @@ task.spawn(function()
     end
 end)
 
--- ========== CHẶN 3TN (chỉ ghi lỗi nếu có) ==========
+-- ========== CHẶN 3TN (không in gì ra console) ==========
 local coreGui = game:GetService("CoreGui")
 local runService = game:GetService("RunService")
 
@@ -610,7 +597,6 @@ pcall(function()
     local exist = coreGui:FindFirstChild("3TN")
     if exist then
         exist:Destroy()
-        -- Không in ra console nữa
     end
 end)
 
@@ -647,12 +633,10 @@ task.spawn(function()
     end
 end)
 
--- ========== LỆNH DỪNG (chỉ ghi lỗi) ==========
+-- Lệnh dừng (không in)
 _G.stop = function()
-    -- Không in ra console
     _G.stop = nil
-    error("Đã dừng script") -- Chỉ hiện lỗi trong console
+    error("Đã dừng script")
 end
 
--- ========== LOAD MODULE CHÍNH ==========
 loadstring(game:HttpGet("https://raw.githubusercontent.com/sucvatthieunang/djtme/refs/heads/main/module"))()
