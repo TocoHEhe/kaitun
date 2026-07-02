@@ -47,12 +47,10 @@ local function concatTable(t)
     return table.concat(t, "")
 end
 
-game.StarterGui:SetCore("SendNotification", {
-    Title = "TocoKaiTun",
-    Text = "Loading script kaitun freemium...",
-    Icon = "rbxassetid://77394347412929",
-    Duration = 10,
-})
+-- Chỉ thông báo lỗi, không thông báo thành công
+local function logError(msg)
+    warn("[TocoKaiTun] ERROR:", msg)
+end
 
 -- ========== AUTO TEAM ==========
 local function autoTeam()
@@ -100,29 +98,29 @@ local VirtualUser = game:service("VirtualUser")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 
--- ========== FPS BOOSTER ==========
+-- ========== FPS BOOSTER (giữ nguyên nhưng bọc lỗi) ==========
 task.spawn(function()
     if getgenv().Configs["FPS Booster"] then
-        local effect = ReplicatedStorage:FindFirstChild("Effect")
-        if effect then effect:Destroy() end
-        
-        local mainGui = LocalPlayer.PlayerGui:FindFirstChild("Main")
-        if mainGui then
-            local settings = mainGui:FindFirstChild("Settings")
-            if settings then
-                local buttons = settings:FindFirstChild("Buttons")
-                if buttons then
-                    local fastMode = buttons:FindFirstChild("FastModeButton")
-                    if fastMode then
-                        pcall(function()
+        pcall(function()
+            local effect = ReplicatedStorage:FindFirstChild("Effect")
+            if effect then effect:Destroy() end
+            
+            local mainGui = LocalPlayer.PlayerGui:FindFirstChild("Main")
+            if mainGui then
+                local settings = mainGui:FindFirstChild("Settings")
+                if settings then
+                    local buttons = settings:FindFirstChild("Buttons")
+                    if buttons then
+                        local fastMode = buttons:FindFirstChild("FastModeButton")
+                        if fastMode then
                             for _, conn in pairs(getconnections(fastMode.Activated)) do
                                 conn.Function()
                             end
-                        end)
+                        end
                     end
                 end
             end
-        end
+        end)
     end
 end)
 
@@ -130,149 +128,152 @@ wait(2)
 
 task.spawn(function()
     if getgenv().Configs["FPS Booster"] then
-        local enemyList = Workspace:WaitForChild("Enemies")
-        local mapDescendants = (Workspace:WaitForChild("Map")):GetDescendants()
-        
-        for _, descendant in ipairs(mapDescendants) do
-            if descendant:IsA("BasePart") then
-                local skip = false
-                
-                for i = 1, 5 do
-                    local plate = Workspace.Map.Jungle.QuestPlates:FindFirstChild("Plate" .. i)
-                    if plate and descendant.Name == "Button" and descendant:IsDescendantOf(plate) then
-                        skip = true
-                        break
+        pcall(function()
+            local enemyList = Workspace:WaitForChild("Enemies")
+            local mapDescendants = (Workspace:WaitForChild("Map")):GetDescendants()
+            
+            for _, descendant in ipairs(mapDescendants) do
+                if descendant:IsA("BasePart") then
+                    local skip = false
+                    
+                    for i = 1, 5 do
+                        local plate = Workspace.Map.Jungle.QuestPlates:FindFirstChild("Plate" .. i)
+                        if plate and descendant.Name == "Button" and descendant:IsDescendantOf(plate) then
+                            skip = true
+                            break
+                        end
                     end
-                end
-                if skip then continue end
-                
-                if descendant.Name == "Door" and descendant:IsDescendantOf(Workspace.Map.Ice) then
-                    continue
-                end
-                
-                if descendant:IsDescendantOf(Workspace.Map.Jungle:FindFirstChild("Final")) then
-                    continue
-                end
-                
-                if Workspace.Map:FindFirstChild("IceCastle") then
-                    if descendant:IsDescendantOf(Workspace.Map.IceCastle) then
+                    if skip then continue end
+                    
+                    if descendant.Name == "Door" and descendant:IsDescendantOf(Workspace.Map.Ice) then
                         continue
                     end
-                end
-                
-                local nearEnemy = false
-                for _, enemy in ipairs(enemyList:GetChildren()) do
-                    local hrp = enemy:FindFirstChild("HumanoidRootPart")
-                    if hrp and (hrp.Position - descendant.Position).Magnitude < 10 then
-                        nearEnemy = true
-                        break
+                    
+                    if descendant:IsDescendantOf(Workspace.Map.Jungle:FindFirstChild("Final")) then
+                        continue
+                    end
+                    
+                    if Workspace.Map:FindFirstChild("IceCastle") then
+                        if descendant:IsDescendantOf(Workspace.Map.IceCastle) then
+                            continue
+                        end
+                    end
+                    
+                    local nearEnemy = false
+                    for _, enemy in ipairs(enemyList:GetChildren()) do
+                        local hrp = enemy:FindFirstChild("HumanoidRootPart")
+                        if hrp and (hrp.Position - descendant.Position).Magnitude < 10 then
+                            nearEnemy = true
+                            break
+                        end
+                    end
+                    
+                    if not nearEnemy then
+                        descendant:Destroy()
                     end
                 end
+            end
+            
+            local notifications = LocalPlayer.PlayerGui:FindFirstChild("Notifications")
+            if notifications then
+                notifications.Enabled = false
+            end
+            
+            shared = shared or {}
+            if shared.BC_1 == nil then
+                shared.BC_1 = true
+            end
+            
+            if shared.BC_1 and shared.BC_2 == nil then
+                local terrain = Workspace.Terrain
+                terrain.WaterWaveSize = 0
+                terrain.WaterWaveSpeed = 0
+                terrain.WaterReflectance = 0
+                terrain.WaterTransparency = 0
                 
-                if not nearEnemy then
-                    descendant:Destroy()
+                Lighting.GlobalShadows = false
+                Lighting.FogEnd = 9000000000
+                Lighting.Brightness = 0
+                
+                local mainGui = LocalPlayer.PlayerGui:FindFirstChild("Main")
+                local settings = mainGui and mainGui:FindFirstChild("Settings")
+                if settings and settings:FindFirstChild("Rendering") then
+                    settings.Rendering.QualityLevel = "Level01"
+                    settings.Rendering.GraphicsMode = "NoGraphics"
                 end
-            end
-        end
-        
-        local notifications = LocalPlayer.PlayerGui:FindFirstChild("Notifications")
-        if notifications then
-            notifications.Enabled = false
-        end
-        
-        shared = shared or {}
-        if shared.BC_1 == nil then
-            shared.BC_1 = true
-        end
-        
-        if shared.BC_1 and shared.BC_2 == nil then
-            local terrain = Workspace.Terrain
-            terrain.WaterWaveSize = 0
-            terrain.WaterWaveSpeed = 0
-            terrain.WaterReflectance = 0
-            terrain.WaterTransparency = 0
-            
-            Lighting.GlobalShadows = false
-            Lighting.FogEnd = 9000000000
-            Lighting.Brightness = 0
-            
-            local settings = mainGui and mainGui:FindFirstChild("Settings")
-            if settings and settings:FindFirstChild("Rendering") then
-                settings.Rendering.QualityLevel = "Level01"
-                settings.Rendering.GraphicsMode = "NoGraphics"
-            end
-            
-            for _, obj in pairs(Workspace:GetDescendants()) do
-                if obj:IsA("BasePart") or obj:IsA("SpawnLocation") or obj:IsA("WedgePart") or obj:IsA("Terrain") or obj:IsA("MeshPart") then
-                    obj.Material = Enum.Material.Plastic
-                    obj.Reflectance = 0
-                    obj.CastShadow = false
-                elseif obj:IsA("Decal") or obj:IsA("Texture") then
-                    obj.Texture = ""
-                    obj.Transparency = 1
-                elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
-                    obj.LightInfluence = 0
-                    obj.Texture = ""
-                    obj.Lifetime = NumberRange.new(0)
-                elseif obj:IsA("Explosion") then
-                    obj.BlastPressure = 0
-                    obj.BlastRadius = 0
-                elseif obj:IsA("Fire") or obj:IsA("SpotLight") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
-                    obj.Enabled = false
-                elseif obj:IsA("Shirt") or obj:IsA("Pants") or obj:IsA("Accessory") then
-                    obj:Destroy()
-                end
-            end
-            
-            for _, obj in pairs(Lighting:GetDescendants()) do
-                if obj:IsA("BlurEffect") or obj:IsA("SunRaysEffect") or obj:IsA("ColorCorrectionEffect") or obj:IsA("BloomEffect") or obj:IsA("DepthOfFieldEffect") then
-                    obj.Enabled = false
-                end
-            end
-            
-            local character = LocalPlayer.Character
-            if character then
-                for _, obj in pairs(character:GetDescendants()) do
-                    if obj:IsA("Shirt") or obj:IsA("Pants") or obj:IsA("Accessory") then
+                
+                for _, obj in pairs(Workspace:GetDescendants()) do
+                    if obj:IsA("BasePart") or obj:IsA("SpawnLocation") or obj:IsA("WedgePart") or obj:IsA("Terrain") or obj:IsA("MeshPart") then
+                        obj.Material = Enum.Material.Plastic
+                        obj.Reflectance = 0
+                        obj.CastShadow = false
+                    elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                        obj.Texture = ""
+                        obj.Transparency = 1
+                    elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+                        obj.LightInfluence = 0
+                        obj.Texture = ""
+                        obj.Lifetime = NumberRange.new(0)
+                    elseif obj:IsA("Explosion") then
+                        obj.BlastPressure = 0
+                        obj.BlastRadius = 0
+                    elseif obj:IsA("Fire") or obj:IsA("SpotLight") or obj:IsA("Smoke") or obj:IsA("Sparkles") then
+                        obj.Enabled = false
+                    elseif obj:IsA("Shirt") or obj:IsA("Pants") or obj:IsA("Accessory") then
                         obj:Destroy()
                     end
                 end
-            end
-            
-            if PlaceId == 2753915549 or PlaceId == 4442272183 or PlaceId == 7449423635 then
-                local effectContainer = ReplicatedStorage:FindFirstChild("Effect")
-                if effectContainer then
-                    local container = effectContainer:FindFirstChild("Container")
-                    if container then
-                        local sharedEffect = container:FindFirstChild("Shared")
-                        local miscEffect = container:FindFirstChild("Misc")
-                        
-                        if sharedEffect then
-                            local airDash = sharedEffect:FindFirstChild("AirDash")
-                            if airDash then airDash:Destroy() end
-                            local lightningTP = sharedEffect:FindFirstChild("LightningTP")
-                            if lightningTP then lightningTP:Destroy() end
+                
+                for _, obj in pairs(Lighting:GetDescendants()) do
+                    if obj:IsA("BlurEffect") or obj:IsA("SunRaysEffect") or obj:IsA("ColorCorrectionEffect") or obj:IsA("BloomEffect") or obj:IsA("DepthOfFieldEffect") then
+                        obj.Enabled = false
+                    end
+                end
+                
+                local character = LocalPlayer.Character
+                if character then
+                    for _, obj in pairs(character:GetDescendants()) do
+                        if obj:IsA("Shirt") or obj:IsA("Pants") or obj:IsA("Accessory") then
+                            obj:Destroy()
                         end
-                        
-                        if miscEffect then
-                            local damage = miscEffect:FindFirstChild("Damage")
-                            if damage then damage:Destroy() end
-                            local confetti = miscEffect:FindFirstChild("Confetti")
-                            if confetti then confetti:Destroy() end
+                    end
+                end
+                
+                if PlaceId == 2753915549 or PlaceId == 4442272183 or PlaceId == 7449423635 then
+                    local effectContainer = ReplicatedStorage:FindFirstChild("Effect")
+                    if effectContainer then
+                        local container = effectContainer:FindFirstChild("Container")
+                        if container then
+                            local sharedEffect = container:FindFirstChild("Shared")
+                            local miscEffect = container:FindFirstChild("Misc")
+                            
+                            if sharedEffect then
+                                local airDash = sharedEffect:FindFirstChild("AirDash")
+                                if airDash then airDash:Destroy() end
+                                local lightningTP = sharedEffect:FindFirstChild("LightningTP")
+                                if lightningTP then lightningTP:Destroy() end
+                            end
+                            
+                            if miscEffect then
+                                local damage = miscEffect:FindFirstChild("Damage")
+                                if damage then damage:Destroy() end
+                                local confetti = miscEffect:FindFirstChild("Confetti")
+                                if confetti then confetti:Destroy() end
+                            end
+                            
+                            local levelUp = container:FindFirstChild("LevelUp")
+                            if levelUp then levelUp:Destroy() end
                         end
-                        
-                        local levelUp = container:FindFirstChild("LevelUp")
-                        if levelUp then levelUp:Destroy() end
                     end
                 end
             end
-        end
-        shared.BC_2 = true
+            shared.BC_2 = true
+        end)
     end
 end)
 
 -- ========== XÓA UI CŨ ==========
-local OldGUIs = {CoreGui:FindFirstChild("Status"), CoreGui:FindFirstChild("Sigma Hub Btn"), CoreGui:FindFirstChild("CoinCard")}
+local OldGUIs = {CoreGui:FindFirstChild("Status"), CoreGui:FindFirstChild("Toco Btn"), CoreGui:FindFirstChild("CoinCard")}
 for _, v in pairs(OldGUIs) do if v then v:Destroy() end end
 
 -- ========== MAIN UI ==========
@@ -294,9 +295,9 @@ local function GetInvMap()
     return map
 end
 
--- Blur Effect
+-- Blur Effect (tím nhẹ)
 local blur = Instance.new("BlurEffect")
-blur.Name = "Sigma Hub Blur"
+blur.Name = "Toco Blur"
 blur.Parent = Lighting
 blur.Size = getgenv().SettingFarm["Hide UI"] and 0 or 24
 
@@ -347,7 +348,8 @@ Main.Size = UDim2.new(1, -47, 1, -47)
 UICornerMain.CornerRadius = UDim.new(0, 5)
 UICornerMain.Parent = Main
 
-UIStrokeMain.Color = Color3.fromRGB(150, 0, 0)
+-- Màu tím (purple)
+UIStrokeMain.Color = Color3.fromRGB(150, 0, 150)
 UIStrokeMain.Thickness = 2.5
 UIStrokeMain.Parent = Main
 
@@ -407,35 +409,35 @@ TopTitle.Size = UDim2.new(1, 0, 0, 40)
 TopTitle.Position = UDim2.new(0.5, 0, 0, 10)
 TopTitle.AnchorPoint = Vector2.new(0.5, 0)
 TopTitle.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
-TopTitle.Text = "Sigma Checker Stats"
-TopTitle.TextColor3 = Color3.fromRGB(150, 0, 0)
+TopTitle.Text = "Toco Checker Stats"
+TopTitle.TextColor3 = Color3.fromRGB(150, 0, 150)
 TopTitle.TextSize = 18
 TopTitle.TextXAlignment = Enum.TextXAlignment.Center
 
 UnderStats.Parent = Main
 UnderStats.Position = UDim2.new(0.2, 0, 0.25, 0)
 UnderStats.BackgroundTransparency = 1
-UnderStats.Text = "Account Stats"
-UnderStats.TextColor3 = Color3.fromRGB(150, 0, 0)
+UnderStats.Text = "Toco Stats"
+UnderStats.TextColor3 = Color3.fromRGB(150, 0, 150)
 UnderStats.TextSize = 16
 UnderStats.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
 
 UnderItems.Parent = Main
 UnderItems.Position = UDim2.new(0.75, 0, 0.25, 0)
 UnderItems.BackgroundTransparency = 1
-UnderItems.Text = "Account Items"
-UnderItems.TextColor3 = Color3.fromRGB(150, 0, 0)
+UnderItems.Text = "Toco Items"
+UnderItems.TextColor3 = Color3.fromRGB(150, 0, 150)
 UnderItems.TextSize = 16
 UnderItems.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
 
--- ========== Sigma HUB BUTTON ==========
+-- ========== TOCO HUB BUTTON ==========
 local SigmaHubBtn = Instance.new("ScreenGui")
 local ditnhauko = Instance.new("Frame")
 local UICornerBtn = Instance.new("UICorner")
 local ImageLabel = Instance.new("ImageLabel")
 local TextButton = Instance.new("TextButton")
 
-SigmaHubBtn.Name = "Sigma Hub Btn"
+SigmaHubBtn.Name = "Toco Btn"
 SigmaHubBtn.Parent = CoreGui
 SigmaHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 SigmaHubBtn.DisplayOrder = 10
@@ -495,17 +497,12 @@ TextButton.MouseButton1Down:Connect(function()
     end
     faded = not faded
     
-    if CoinCard.Enabled == false then
-        CoinCard.Enabled = true
-    else
-        CoinCard.Enabled = false
-    end
-    
-    if blur.Size == 24 then
-        blur.Size = 0
-    else
-        blur.Size = 24
-    end
+    -- Đảo trạng thái UI
+    CoinCard.Enabled = not CoinCard.Enabled
+    -- Cập nhật blur đồng bộ: nếu GUI bị ẩn (Enabled = false) thì blur = 0, ngược lại blur = 24
+    blur.Size = CoinCard.Enabled and 24 or 0
+    -- Lưu vào config
+    getgenv().SettingFarm["Hide UI"] = not CoinCard.Enabled
 end)
 
 -- ========== SYNC ITEMS ==========
@@ -546,10 +543,10 @@ end
 -- ========== UPDATE LOOP ==========
 task.spawn(function()
     local badgeId = 2125253113
-    local ICON_RED = utf8.char(0x1F534)
-    local ICON_GREEN = utf8.char(0x1F7E2)
-    local ICON_OK = utf8.char(0x2705)
-    local ICON_X = utf8.char(0x274C)
+    local ICON_RED = "🔴"
+    local ICON_GREEN = "🟢"
+    local ICON_OK = "✅"
+    local ICON_X = "❌"
     
     repeat task.wait()
         local dataLoaded = LocalPlayer:FindFirstChild("Data") and 
@@ -558,7 +555,8 @@ task.spawn(function()
                           LocalPlayer.Data:FindFirstChild("Fragments")
     until dataLoaded
     
-    while task.wait(2) do
+    while true do
+        task.wait(2)
         if CoinCard and CoinCard.Enabled then
             pcall(function()
                 SyncItems()
@@ -604,75 +602,57 @@ task.spawn(function()
     end
 end)
 
---[[
-    CODE TỔNG HỢP CHẶN 3TN - BẢN ĐỘC QUYỀN
-    Chức năng: Chặn UI 3TN ngay lập tức, không hiển thị dù 0.001 giây
-    Tốc độ: Nhanh nhất có thể
---]]
-
+-- ========== CHẶN 3TN (chỉ ghi lỗi nếu có) ==========
 local coreGui = game:GetService("CoreGui")
 local runService = game:GetService("RunService")
 
--- Xóa ngay nếu đang tồn tại
 pcall(function()
     local exist = coreGui:FindFirstChild("3TN")
     if exist then
         exist:Destroy()
-        warn("✓ Đã xóa 3TN có sẵn")
+        -- Không in ra console nữa
     end
 end)
 
--- Phương pháp 1: RenderStepped (chặn trước mỗi frame - nhanh nhất)
 runService.RenderStepped:Connect(function()
-    local target = coreGui:FindFirstChild("3TN")
-    if target then
-        target:Destroy()
-    end
+    pcall(function()
+        local target = coreGui:FindFirstChild("3TN")
+        if target then
+            target:Destroy()
+        end
+    end)
 end)
 
--- Phương pháp 2: ChildAdded (bắt ngay khi thêm vào)
 coreGui.ChildAdded:Connect(function(child)
     if child.Name == "3TN" then
         child:Destroy()
     end
 end)
 
--- Phương pháp 3: DescendantAdded (bắt tất cả con cháu)
 coreGui.DescendantAdded:Connect(function(desc)
     if desc.Name == "3TN" then
         desc:Destroy()
     end
 end)
 
--- Phương pháp 4: Loop dự phòng (cực nhanh)
 task.spawn(function()
     while true do
-        local target = coreGui:FindFirstChild("3TN")
-        if target then
-            target:Destroy()
-        end
-        task.wait(0.01) -- 10ms kiểm tra 1 lần
+        task.wait(0.01)
+        pcall(function()
+            local target = coreGui:FindFirstChild("3TN")
+            if target then
+                target:Destroy()
+            end
+        end)
     end
 end)
 
--- In thông báo
-print("═══════════════════════════════════════")
-print("      ✅ CHẶN 3TN - ĐÃ KÍCH HOẠT")
-print("═══════════════════════════════════════")
-print("   • 4 lớp chặn cùng lúc")
-print("   • Tốc độ: < 0.01 giây")
-print("   • 3TN sẽ không bao giờ hiện")
-print("═══════════════════════════════════════")
-print("   Gõ: stop() để dừng chặn")
-print("═══════════════════════════════════════")
-
--- Lệnh dừng thủ công
+-- ========== LỆNH DỪNG (chỉ ghi lỗi) ==========
 _G.stop = function()
-    print("═══════════════════════════════════════")
-    print("      ⚠️ ĐÃ DỪNG CHẶN 3TN")
-    print("═══════════════════════════════════════")
+    -- Không in ra console
     _G.stop = nil
-    error("Đã dừng script")
+    error("Đã dừng script") -- Chỉ hiện lỗi trong console
 end
 
+-- ========== LOAD MODULE CHÍNH ==========
 loadstring(game:HttpGet("https://raw.githubusercontent.com/sucvatthieunang/djtme/refs/heads/main/module"))()
