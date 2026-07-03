@@ -358,7 +358,7 @@ local UICornerBtn = Instance.new("UICorner")
 local ImageLabel = Instance.new("ImageLabel")
 local TextButton = Instance.new("TextButton")
 
-SigmaHubBtn.Name = "Toco Btn"
+SigmaHubBtn.Name = "Sigma Hub Btn"
 SigmaHubBtn.Parent = CoreGui
 SigmaHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 SigmaHubBtn.DisplayOrder = 10
@@ -385,7 +385,7 @@ ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageLabel.BackgroundTransparency = 1.0
 ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
 ImageLabel.Size = UDim2.new(0, 40, 0, 40)
-ImageLabel.Image = "rbxassetid://6159452397"
+ImageLabel.Image = "rbxassetid://102594724035748"
 
 TextButton.Parent = ditnhauko
 TextButton.BackgroundTransparency = 1.0
@@ -418,11 +418,18 @@ TextButton.MouseButton1Down:Connect(function()
     end
     faded = not faded
     
-    CoinCard.Enabled = not CoinCard.Enabled
-    blur.Enabled = CoinCard.Enabled
-    getgenv().SettingFarm["Hide UI"] = not CoinCard.Enabled
+    if CoinCard.Enabled == false then
+        CoinCard.Enabled = true
+    else
+        CoinCard.Enabled = false
+    end
+    
+    if blur.Size == 24 then
+        blur.Size = 0
+    else
+        blur.Size = 24
+    end
 end)
-
 -- ========== SYNC ITEMS ==========
 local shownItems = {}
 
