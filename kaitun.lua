@@ -1,3 +1,5 @@
+-- Đã sửa lỗi NumberRange (dòng 67) - Tách ParticleEmitter và Trail riêng biệt
+
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
 -- ========== KHỞI TẠO GETGENV ==========
@@ -52,7 +54,7 @@ local VirtualUser = game:service("VirtualUser")
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
 
--- ========== FPS BOOSTER ==========
+-- ========== FPS BOOSTER (đã sửa lỗi NumberRange) ==========
 task.spawn(function()
     if getgenv().Configs["FPS Booster"] then
         pcall(function()
@@ -136,10 +138,14 @@ task.spawn(function()
                     elseif obj:IsA("Decal") or obj:IsA("Texture") then
                         obj.Texture = ""
                         obj.Transparency = 1
-                    elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+                    elseif obj:IsA("ParticleEmitter") then
                         obj.LightInfluence = 0
                         obj.Texture = ""
                         obj.Lifetime = NumberRange.new(0)
+                    elseif obj:IsA("Trail") then
+                        obj.LightInfluence = 0
+                        obj.Texture = ""
+                        obj.Lifetime = 0
                     elseif obj:IsA("Explosion") then
                         obj.BlastPressure = 0
                         obj.BlastRadius = 0
