@@ -1,19 +1,78 @@
--- Đây là script hoàn chỉnh bạn đã cung cấp, đã sửa lỗi NumberRange và bao gồm toàn bộ UI, Heartbeat, chặn 3TN.
--- Phần auto farm sẽ được load từ module bên ngoài (loadstring ở cuối script).
--- Mọi thứ đã ổn, không cần chỉnh sửa thêm.
+-- ========== TOCOKAITUN - FULL SCRIPT (UI + HEARTBEAT + AUTO FARM) ==========
+-- Bao gồm: Config, WindUI, Auto Team, FPS Booster (đã sửa lỗi NumberRange),
+--          Giao diện CoinCard, nút bật/tắt, heartbeat, chặn 3TN,
+--          Và module auto farm từ github (loadstring ở cuối).
+-- UI được tạo mới hoàn toàn, nút bấm hoạt động chuẩn, blur tắt/mở bằng Enabled.
 
--- Đã sửa lỗi NumberRange (dòng 67) - Tách ParticleEmitter và Trail riêng biệt
+-- ===== CONFIG =====
+Config = {
+    Team = "Pirates",
+    FPS = 15,
+    Configuration = {
+        HopWhenIdle = true,
+        AutoHop = true,
+        AutoHopDelay = 60 * 60,
+        FpsBoost = false,
+        blackscreen = false
+    },
+    Fruit ={
+        Sniper = true,
+        Fruit = {"Kitsune-Kitsune"}
+    },
+    Items = {
+        AutoFullyMelees = true,
+        Saber = true,
+        CursedDualKatana = false,
+        SoulGuitar = true,
+        RaceV2 = true
+    },
+    Settings = {
+        StayInSea2UntilHaveDarkFragments = false
+    }
+}
 
+-- ===== WINDUI =====
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
--- ========== KHỞI TẠO GETGENV ==========
+-- ===== KHỞI TẠO GETGENV =====
 getgenv().Configs = getgenv().Configs or {}
 getgenv().Configs["FPS Booster"] = false
-
 getgenv().SettingFarm = getgenv().SettingFarm or {}
-getgenv().SettingFarm["Hide UI"] = false
+getgenv().SettingFarm["Hide UI"] = false  -- UI sẽ hiện khi bắt đầu
 
--- ========== AUTO TEAM ==========
+-- ===== DỊCH VỤ =====
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+-- ===== HEARTBEAT =====
+local API_URL = "http://shoptoco.getenjoyment.net//api.php"
+local function sendHeartbeat()
+    local payload = {
+        username = player.Name,
+        user_id  = tostring(player.UserId),
+        avatar   = "https://www.roblox.com/headshot-thumbnail/image?userId="
+                   .. player.UserId .. "&width=150&height=150&format=png"
+    }
+    local body = HttpService:JSONEncode(payload)
+    pcall(function()
+        request({
+            Url = API_URL,
+            Method = "POST",
+            Headers = { ["Content-Type"] = "application/json" },
+            Body = body
+        })
+    end)
+end
+sendHeartbeat()
+task.spawn(function()
+    while true do
+        task.wait(20)
+        sendHeartbeat()
+    end
+end)
+
+-- ===== AUTO TEAM =====
 local function autoTeam()
     local player = game.Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui", 10)
@@ -36,29 +95,27 @@ local function autoTeam()
         end
     end
 end
-
 task.spawn(autoTeam)
 wait(2)
 task.spawn(autoTeam)
 
--- ========== KHỞI TẠO BIẾN ==========
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local PlaceId = game.PlaceId
-local Workspace = game:GetService("Workspace")
-local Enemies = Workspace:WaitForChild("Enemies")
-local TeleportService = game:GetService("TeleportService")
+-- ===== KHỞI TẠO BIẾN =====
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local Lighting = game:GetService("Lighting")
+local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
+local TeleportService = game:GetService("TeleportService")
+local BadgeService = game:GetService("BadgeService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = player
+local PlaceId = game.PlaceId
+local Enemies = Workspace:WaitForChild("Enemies")
 local Level = LocalPlayer:WaitForChild("Data"):WaitForChild("Level")
 local Fragments = LocalPlayer:WaitForChild("Data"):WaitForChild("Fragments")
 local Beli = LocalPlayer:WaitForChild("Data"):WaitForChild("Beli")
-local Lighting = game:GetService("Lighting")
-local VirtualInputManager = game:service("VirtualInputManager")
-local VirtualUser = game:service("VirtualUser")
-local CoreGui = game:GetService("CoreGui")
-local TweenService = game:GetService("TweenService")
 
--- ========== FPS BOOSTER (đã sửa lỗi NumberRange) ==========
+-- ===== FPS BOOSTER (ĐÃ SỬA LỖI NUMBERRANGE) =====
 task.spawn(function()
     if getgenv().Configs["FPS Booster"] then
         pcall(function()
@@ -82,9 +139,7 @@ task.spawn(function()
         end)
     end
 end)
-
 wait(2)
-
 task.spawn(function()
     if getgenv().Configs["FPS Booster"] then
         pcall(function()
@@ -209,9 +264,6 @@ local OldGUIs = {CoreGui:FindFirstChild("Status"), CoreGui:FindFirstChild("Toco 
 for _, v in pairs(OldGUIs) do if v then v:Destroy() end end
 
 -- ========== MAIN UI ==========
-local BadgeService = game:GetService("BadgeService")
-local player = Players.LocalPlayer
-
 local function GetInvMap()
     local map = {}
     local success, inv = pcall(function() 
@@ -231,26 +283,144 @@ end
 local blur = Instance.new("BlurEffect")
 blur.Name = "Toco Blur"
 blur.Parent = Lighting
-blur.Enabled = not getgenv().SettingFarm["Hide UI"]
+blur.Enabled = not getgenv().SettingFarm["Hide UI"]  -- mặc định true (UI mở)
 
--- CoinCard UI (toàn bộ giao diện...)
--- ... (giữ nguyên toàn bộ phần UI bạn đã dán ở trên, không thay đổi)
+-- CoinCard UI
+local CoinCard = Instance.new("ScreenGui")
+CoinCard.Name = "CoinCard"
+CoinCard.Parent = CoreGui
+CoinCard.ResetOnSpawn = false
+CoinCard.DisplayOrder = 20
+CoinCard.Enabled = not getgenv().SettingFarm["Hide UI"]  -- mặc định true
 
--- ========== TOCO HUB BUTTON ==========
+local DropShadowHolder = Instance.new("Frame")
+DropShadowHolder.AnchorPoint = Vector2.new(0.5, 0.5)
+DropShadowHolder.BackgroundTransparency = 1
+DropShadowHolder.Name = "DropShadowHolder"
+DropShadowHolder.Parent = CoinCard
+DropShadowHolder.Position = UDim2.new(0.5, 0, 0.5, 0)
+DropShadowHolder.Size = UDim2.new(0, 600, 0, 400)
+
+local Main = Instance.new("Frame")
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+Main.BackgroundTransparency = 0.5
+Main.Name = "Main"
+Main.Parent = DropShadowHolder
+Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+Main.Size = UDim2.new(1, -47, 1, -47)
+
+local UICornerMain = Instance.new("UICorner")
+UICornerMain.CornerRadius = UDim.new(0, 5)
+UICornerMain.Parent = Main
+
+local UIStrokeMain = Instance.new("UIStroke")
+UIStrokeMain.Color = Color3.fromRGB(150, 0, 150)
+UIStrokeMain.Thickness = 2.5
+UIStrokeMain.Parent = Main
+
+local DividerTop = Instance.new("Frame")
+DividerTop.BackgroundColor3 = Color3.fromRGB(27, 42, 53)
+DividerTop.BorderSizePixel = 0
+DividerTop.Parent = Main
+DividerTop.Position = UDim2.new(0.15, 0, 0.15, 0)
+DividerTop.Size = UDim2.new(0.7, 0, 0, 2)
+
+local DividerBottom = Instance.new("Frame")
+DividerBottom.BackgroundColor3 = Color3.fromRGB(27, 42, 53)
+DividerBottom.BorderSizePixel = 0
+DividerBottom.Parent = Main
+DividerBottom.Position = UDim2.new(0.1, 0, 0.75, 0)
+DividerBottom.Size = UDim2.new(0.8, 0, 0, 2)
+
+local TypeAccountScroll = Instance.new("ScrollingFrame")
+TypeAccountScroll.BackgroundTransparency = 1
+TypeAccountScroll.Name = "TypeAccountScroll"
+TypeAccountScroll.Parent = Main
+TypeAccountScroll.Position = UDim2.new(0.55, 0, 0.35, 0)
+TypeAccountScroll.Size = UDim2.new(0.4, 0, 0.35, 0)
+TypeAccountScroll.ScrollBarThickness = 0
+TypeAccountScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 6)
+layout.Parent = TypeAccountScroll
+
+local LevelLabel = Instance.new("TextLabel")
+local RaceLabel = Instance.new("TextLabel")
+local BeliLabel = Instance.new("TextLabel")
+local FragLabel = Instance.new("TextLabel")
+local GodHumanLabel = Instance.new("TextLabel")
+local CursedDualKatanaLabel = Instance.new("TextLabel")
+local ValkyrieHelmLabel = Instance.new("TextLabel")
+local SkullGuitarLabel = Instance.new("TextLabel")
+local MirrorFractalLabel = Instance.new("TextLabel")
+local PullLeverLabel = Instance.new("TextLabel")
+local TopTitle = Instance.new("TextLabel")
+local UnderStats = Instance.new("TextLabel")
+local UnderItems = Instance.new("TextLabel")
+
+local function SetupLabel(lbl, pos, text)
+    lbl.BackgroundTransparency = 1
+    lbl.Parent = Main
+    lbl.Position = pos
+    lbl.Size = UDim2.new(0, 0, 0, 18)
+    lbl.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
+    lbl.Text = text
+    lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+    lbl.TextSize = 16
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+end
+
+SetupLabel(LevelLabel, UDim2.new(0.07, 0, 0.35, 0), "Level: N/A")
+SetupLabel(RaceLabel, UDim2.new(0.07, 0, 0.45, 0), "Race: N/A")
+SetupLabel(BeliLabel, UDim2.new(0.07, 0, 0.55, 0), "Beli: N/A")
+SetupLabel(FragLabel, UDim2.new(0.07, 0, 0.65, 0), "Frag: N/A")
+SetupLabel(GodHumanLabel, UDim2.new(0.07, 0, 0.8, 0), "GodHuman")
+SetupLabel(CursedDualKatanaLabel, UDim2.new(0.4, 0, 0.8, 0), "Cursed Dual Katana")
+SetupLabel(ValkyrieHelmLabel, UDim2.new(0.75, 0, 0.8, 0), "Valkyrie Helm")
+SetupLabel(SkullGuitarLabel, UDim2.new(0.07, 0, 0.9, 0), "Skull Guitar")
+SetupLabel(MirrorFractalLabel, UDim2.new(0.4, 0, 0.9, 0), "Mirror Fractal")
+SetupLabel(PullLeverLabel, UDim2.new(0.75, 0, 0.9, 0), "Pull Lever")
+
+TopTitle.Name = "TopTitle"
+TopTitle.Parent = Main
+TopTitle.BackgroundTransparency = 1
+TopTitle.Size = UDim2.new(1, 0, 0, 40)
+TopTitle.Position = UDim2.new(0.5, 0, 0, 10)
+TopTitle.AnchorPoint = Vector2.new(0.5, 0)
+TopTitle.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
+TopTitle.Text = "Toco Checker Stats"
+TopTitle.TextColor3 = Color3.fromRGB(150, 0, 150)
+TopTitle.TextSize = 18
+TopTitle.TextXAlignment = Enum.TextXAlignment.Center
+
+UnderStats.Parent = Main
+UnderStats.Position = UDim2.new(0.2, 0, 0.25, 0)
+UnderStats.BackgroundTransparency = 1
+UnderStats.Text = "Stats"
+UnderStats.TextColor3 = Color3.fromRGB(150, 0, 150)
+UnderStats.TextSize = 16
+UnderStats.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
+
+UnderItems.Parent = Main
+UnderItems.Position = UDim2.new(0.75, 0, 0.25, 0)
+UnderItems.BackgroundTransparency = 1
+UnderItems.Text = "Items"
+UnderItems.TextColor3 = Color3.fromRGB(150, 0, 150)
+UnderItems.TextSize = 16
+UnderItems.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
+
+-- ========== NÚT BẬT/TẮT UI ==========
 local SigmaHubBtn = Instance.new("ScreenGui")
-local ImageButton = Instance.new("ImageButton")
-local UICorner = Instance.new("UICorner")
-
 SigmaHubBtn.Name = "Sigma Hub Btn"
 SigmaHubBtn.Parent = CoreGui
 SigmaHubBtn.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 SigmaHubBtn.DisplayOrder = 10
 SigmaHubBtn.ResetOnSpawn = false
+SigmaHubBtn.Enabled = true  -- luôn bật nút
 
-if getgenv().SettingFarm["Hide UI"] then
-    SigmaHubBtn.Enabled = false
-end
-
+local ImageButton = Instance.new("ImageButton")
 ImageButton.Parent = SigmaHubBtn
 ImageButton.Name = "SigmaButton"
 ImageButton.AnchorPoint = Vector2.new(0.1, 0.1)
@@ -263,49 +433,36 @@ ImageButton.Active = true
 ImageButton.Draggable = true
 ImageButton.AutoButtonColor = false
 
+local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(1, 0)
 UICorner.Parent = ImageButton
 
-local TweenService = game:GetService("TweenService")
-
 local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-
 local originalSize = UDim2.new(0, 80, 0, 80)
 local pressedSize = UDim2.new(0, 70, 0, 70)
-
 local pressed = false
 
 ImageButton.MouseButton1Down:Connect(function()
-
     if pressed then
-        TweenService:Create(ImageButton, tweenInfo, {
-            Size = originalSize
-        }):Play()
+        TweenService:Create(ImageButton, tweenInfo, {Size = originalSize}):Play()
     else
-        TweenService:Create(ImageButton, tweenInfo, {
-            Size = pressedSize
-        }):Play()
+        TweenService:Create(ImageButton, tweenInfo, {Size = pressedSize}):Play()
     end
-
     pressed = not pressed
 
+    -- Toggle UI và blur
     CoinCard.Enabled = not CoinCard.Enabled
-
-    if blur.Size == 24 then
-        blur.Size = 0
-    else
-        blur.Size = 24
-    end
+    blur.Enabled = CoinCard.Enabled  -- sử dụng Enabled để tắt/mở hoàn toàn
+    getgenv().SettingFarm["Hide UI"] = not CoinCard.Enabled
 end)
--- ========== SYNC ITEMS ==========
-local shownItems = {}
 
+-- ========== SYNC ITEMS & UPDATE LOOP ==========
+local shownItems = {}
 local function SyncItems()
-    local success, inventory = pcall(function() 
-        return ReplicatedStorage.Remotes.CommF_:InvokeServer("getInventory") 
+    local success, inventory = pcall(function()
+        return ReplicatedStorage.Remotes.CommF_:InvokeServer("getInventory")
     end)
     if not success or not inventory then return end
-    
     local current = {}
     for _, v in pairs(inventory) do
         if typeof(v) == "table" and v.Name then
@@ -323,68 +480,38 @@ local function SyncItems()
             end
         end
     end
-    
     for name, label in pairs(shownItems) do
-        if not current[name] then 
-            label:Destroy() 
-            shownItems[name] = nil 
-        end
+        if not current[name] then label:Destroy(); shownItems[name] = nil end
     end
 end
 
--- ========== UPDATE LOOP ==========
 task.spawn(function()
     local badgeId = 2125253113
     local ICON_RED = "🔴"
     local ICON_GREEN = "🟢"
     local ICON_OK = "✅"
     local ICON_X = "❌"
-    
-    repeat task.wait()
-        local dataLoaded = LocalPlayer:FindFirstChild("Data") and 
-                          LocalPlayer.Data:FindFirstChild("Level") and 
-                          LocalPlayer.Data:FindFirstChild("Beli") and
-                          LocalPlayer.Data:FindFirstChild("Fragments")
-    until dataLoaded
-    
+    repeat task.wait() until LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level") and LocalPlayer.Data:FindFirstChild("Beli") and LocalPlayer.Data:FindFirstChild("Fragments")
     while true do
         task.wait(2)
         if CoinCard and CoinCard.Enabled then
             pcall(function()
                 SyncItems()
                 local inv = GetInvMap()
-                
                 local hasValk = inv["Valkyrie Helm"] or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Valkyrie Helm"))
                 ValkyrieHelmLabel.Text = (hasValk and ICON_GREEN or ICON_RED) .. " Valkyrie Helm"
-                
                 local backpack = LocalPlayer:FindFirstChild("Backpack")
-                local hasCDK = inv["Cursed Dual Katana"] or 
-                              (backpack and backpack:FindFirstChild("Cursed Dual Katana")) or 
-                              (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Cursed Dual Katana"))
+                local hasCDK = inv["Cursed Dual Katana"] or (backpack and backpack:FindFirstChild("Cursed Dual Katana")) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Cursed Dual Katana"))
                 CursedDualKatanaLabel.Text = (hasCDK and ICON_GREEN or ICON_RED) .. " Cursed Dual Katana"
-                
-                local okG, resG = pcall(function() 
-                    return ReplicatedStorage.Remotes.CommF_:InvokeServer("BuyGodhuman", true) 
-                end)
+                local okG, resG = pcall(function() return ReplicatedStorage.Remotes.CommF_:InvokeServer("BuyGodhuman", true) end)
                 GodHumanLabel.Text = (okG and (resG == 1 or resG == 2) and ICON_GREEN or ICON_RED) .. " GodHuman"
-                
-                local hasSG = inv["Skull Guitar"] or 
-                             (backpack and backpack:FindFirstChild("Skull Guitar")) or 
-                             (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Skull Guitar"))
+                local hasSG = inv["Skull Guitar"] or (backpack and backpack:FindFirstChild("Skull Guitar")) or (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Skull Guitar"))
                 SkullGuitarLabel.Text = (hasSG and ICON_GREEN or ICON_RED) .. " Skull Guitar"
-                
                 MirrorFractalLabel.Text = (inv["Mirror Fractal"] and ICON_GREEN or ICON_RED) .. " Mirror Fractal"
-                
-                local okL, resL = pcall(function() 
-                    return ReplicatedStorage.Remotes.CommF_:InvokeServer("CheckTempleDoor") 
-                end)
+                local okL, resL = pcall(function() return ReplicatedStorage.Remotes.CommF_:InvokeServer("CheckTempleDoor") end)
                 PullLeverLabel.Text = (okL and (resL == true or resL == "true") and ICON_GREEN or ICON_RED) .. " Pull Lever"
-                
                 local hasBadge = false
-                pcall(function() 
-                    hasBadge = BadgeService:UserHasBadgeAsync(LocalPlayer.UserId, badgeId) 
-                end)
-                
+                pcall(function() hasBadge = BadgeService:UserHasBadgeAsync(LocalPlayer.UserId, badgeId) end)
                 LevelLabel.Text = "Level: " .. tostring(LocalPlayer.Data.Level.Value) .. "   Third Sea: " .. (hasBadge and ICON_OK or ICON_X)
                 BeliLabel.Text = "Beli: " .. tostring(LocalPlayer.Data.Beli.Value)
                 FragLabel.Text = "Frag: " .. tostring(LocalPlayer.Data.Fragments.Value)
@@ -397,46 +524,11 @@ end)
 -- ========== CHẶN 3TN ==========
 local coreGui = game:GetService("CoreGui")
 local runService = game:GetService("RunService")
-
-pcall(function()
-    local exist = coreGui:FindFirstChild("3TN")
-    if exist then
-        exist:Destroy()
-    end
-end)
-
-runService.RenderStepped:Connect(function()
-    pcall(function()
-        local target = coreGui:FindFirstChild("3TN")
-        if target then
-            target:Destroy()
-        end
-    end)
-end)
-
-coreGui.ChildAdded:Connect(function(child)
-    if child.Name == "3TN" then
-        child:Destroy()
-    end
-end)
-
-coreGui.DescendantAdded:Connect(function(desc)
-    if desc.Name == "3TN" then
-        desc:Destroy()
-    end
-end)
-
-task.spawn(function()
-    while true do
-        task.wait(0.01)  -- Có thể tăng lên 0.1 nếu muốn giảm tải CPU
-        pcall(function()
-            local target = coreGui:FindFirstChild("3TN")
-            if target then
-                target:Destroy()
-            end
-        end)
-    end
-end)
+pcall(function() local e = coreGui:FindFirstChild("3TN") if e then e:Destroy() end end)
+runService.RenderStepped:Connect(function() pcall(function() local t = coreGui:FindFirstChild("3TN") if t then t:Destroy() end end) end)
+coreGui.ChildAdded:Connect(function(c) if c.Name == "3TN" then c:Destroy() end end)
+coreGui.DescendantAdded:Connect(function(d) if d.Name == "3TN" then d:Destroy() end end)
+task.spawn(function() while true do task.wait(0.1) pcall(function() local t = coreGui:FindFirstChild("3TN") if t then t:Destroy() end end) end end)
 
 -- ========== TỰ ĐỘNG VÀO LẠI GAME KHI BỊ KICK ==========
 Players.PlayerRemoving:Connect(function(leavingPlayer)
@@ -445,48 +537,11 @@ Players.PlayerRemoving:Connect(function(leavingPlayer)
     end
 end)
 
--- ========== HEARTBEAT (API mới - thay thế) ==========
-local API_URL = "http://shoptoco.getenjoyment.net//api.php"
-
-local function sendHeartbeat()
-    local payload = {
-        username = player.Name,
-        user_id  = tostring(player.UserId),
-        avatar   = "https://www.roblox.com/headshot-thumbnail/image?userId="
-                   .. player.UserId .. "&width=150&height=150&format=png"
-    }
-
-    local body = game:GetService("HttpService"):JSONEncode(payload)
-
-    local success, response = pcall(function()
-        return request({
-            Url = API_URL,
-            Method = "POST",
-            Headers = { ["Content-Type"] = "application/json" },
-            Body = body
-        })
-    end)
-
-    if success then
-        print("[Tracker] Đã gửi heartbeat:", response.StatusCode)
-    else
-        warn("[Tracker] Gửi thất bại:", response)
-    end
-end
-
-sendHeartbeat()
-task.spawn(function()
-    while true do
-        task.wait(20)
-        sendHeartbeat()
-    end
-end)
-
--- Lệnh dừng
+-- ========== LỆNH DỪNG ==========
 _G.stop = function()
     _G.stop = nil
     error("Đã dừng script")
 end
 
--- Load module auto farm (chứa toàn bộ logic quest, raid, stats...)
+-- ========== LOAD MODULE AUTO FARM ==========
 loadstring(game:HttpGet("https://raw.githubusercontent.com/sucvatthieunang/djtme/refs/heads/main/module"))()
