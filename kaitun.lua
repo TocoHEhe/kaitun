@@ -1,5 +1,3 @@
--- Đã sửa lỗi NumberRange (dòng 67) - Tách ParticleEmitter và Trail riêng biệt
-
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
 -- ========== KHỞI TẠO GETGENV ==========
