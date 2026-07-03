@@ -1,18 +1,13 @@
- ===== WINDUI =====
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+-- ========== TOCOKAITUN - FULL SCRIPT (HEARTBEAT, UI CÓ STATUS, AUTO FARM) ==========
+-- Bao gồm: Heartbeat, Auto Team, FPS Booster (sửa lỗi NumberRange), UI CoinCard,
+--          Nút bật/tắt (blur toggle), hiển thị thông tin + trạng thái, chặn 3TN,
+--          Tự động vào lại game khi kick, load module auto farm.
 
--- ===== KHỞI TẠO GETGENV =====
-getgenv().Configs = getgenv().Configs or {}
-getgenv().Configs["FPS Booster"] = false
-getgenv().SettingFarm = getgenv().SettingFarm or {}
-getgenv().SettingFarm["Hide UI"] = false  -- UI sẽ hiện khi bắt đầu
-
--- ===== DỊCH VỤ =====
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 
--- ===== HEARTBEAT =====
+-- ========== HEARTBEAT ==========
 local API_URL = "http://shoptoco.getenjoyment.net//api.php"
 local function sendHeartbeat()
     local payload = {
@@ -39,7 +34,15 @@ task.spawn(function()
     end
 end)
 
--- ===== AUTO TEAM =====
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+-- ========== KHỞI TẠO GETGENV ==========
+getgenv().Configs = getgenv().Configs or {}
+getgenv().Configs["FPS Booster"] = false
+getgenv().SettingFarm = getgenv().SettingFarm or {}
+getgenv().SettingFarm["Hide UI"] = false
+
+-- ========== AUTO TEAM ==========
 local function autoTeam()
     local player = game.Players.LocalPlayer
     local playerGui = player:WaitForChild("PlayerGui", 10)
@@ -66,7 +69,7 @@ task.spawn(autoTeam)
 wait(2)
 task.spawn(autoTeam)
 
--- ===== KHỞI TẠO BIẾN =====
+-- ========== KHỞI TẠO BIẾN ==========
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 local Lighting = game:GetService("Lighting")
@@ -82,7 +85,7 @@ local Level = LocalPlayer:WaitForChild("Data"):WaitForChild("Level")
 local Fragments = LocalPlayer:WaitForChild("Data"):WaitForChild("Fragments")
 local Beli = LocalPlayer:WaitForChild("Data"):WaitForChild("Beli")
 
--- ===== FPS BOOSTER (ĐÃ SỬA LỖI NUMBERRANGE) =====
+-- ========== FPS BOOSTER (ĐÃ SỬA LỖI NUMBERRANGE) ==========
 task.spawn(function()
     if getgenv().Configs["FPS Booster"] then
         pcall(function()
@@ -326,6 +329,8 @@ local PullLeverLabel = Instance.new("TextLabel")
 local TopTitle = Instance.new("TextLabel")
 local UnderStats = Instance.new("TextLabel")
 local UnderItems = Instance.new("TextLabel")
+-- Thêm label trạng thái
+local StatusLabel = Instance.new("TextLabel")
 
 local function SetupLabel(lbl, pos, text)
     lbl.BackgroundTransparency = 1
@@ -349,6 +354,24 @@ SetupLabel(ValkyrieHelmLabel, UDim2.new(0.75, 0, 0.8, 0), "Valkyrie Helm")
 SetupLabel(SkullGuitarLabel, UDim2.new(0.07, 0, 0.9, 0), "Skull Guitar")
 SetupLabel(MirrorFractalLabel, UDim2.new(0.4, 0, 0.9, 0), "Mirror Fractal")
 SetupLabel(PullLeverLabel, UDim2.new(0.75, 0, 0.9, 0), "Pull Lever")
+
+-- Status label (nằm giữa trên)
+StatusLabel.Parent = Main
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Size = UDim2.new(0.7, 0, 0, 20)
+StatusLabel.Position = UDim2.new(0.15, 0, 0.18, 0)  -- ngay trên divider top một chút
+StatusLabel.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.FontWeight.Bold)
+StatusLabel.TextColor3 = Color3.fromRGB(255, 255, 0)  -- vàng
+StatusLabel.Text = "Sẵn sàng"
+StatusLabel.TextSize = 14
+StatusLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+-- Hàm cập nhật trạng thái (có thể gọi từ bất cứ đâu, kể cả module ngoài)
+function _G.updateStatus(msg)
+    if StatusLabel then
+        StatusLabel.Text = "Trạng thái: " .. tostring(msg)
+    end
+end
 
 TopTitle.Name = "TopTitle"
 TopTitle.Parent = Main
@@ -421,6 +444,11 @@ ImageButton.MouseButton1Down:Connect(function()
     CoinCard.Enabled = not CoinCard.Enabled
     blur.Enabled = CoinCard.Enabled  -- sử dụng Enabled để tắt/mở hoàn toàn
     getgenv().SettingFarm["Hide UI"] = not CoinCard.Enabled
+    if CoinCard.Enabled then
+        _G.updateStatus("UI hiện")
+    else
+        _G.updateStatus("UI ẩn")
+    end
 end)
 
 -- ========== SYNC ITEMS & UPDATE LOOP ==========
@@ -510,5 +538,7 @@ _G.stop = function()
     error("Đã dừng script")
 end
 
+_G.updateStatus("Đang tải module auto farm...")
 -- ========== LOAD MODULE AUTO FARM ==========
 loadstring(game:HttpGet("https://raw.githubusercontent.com/sucvatthieunang/djtme/refs/heads/main/module"))()
+_G.updateStatus("Auto farm đã sẵn sàng")
