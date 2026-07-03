@@ -353,10 +353,8 @@ UnderItems.FontFace = Font.new("rbxasset://fonts/families/GothamSSm.json", Enum.
 
 -- ========== TOCO HUB BUTTON ==========
 local SigmaHubBtn = Instance.new("ScreenGui")
-local ditnhauko = Instance.new("Frame")
-local UICornerBtn = Instance.new("UICorner")
-local ImageLabel = Instance.new("ImageLabel")
-local TextButton = Instance.new("TextButton")
+local ImageButton = Instance.new("ImageButton")
+local UICorner = Instance.new("UICorner")
 
 SigmaHubBtn.Name = "Sigma Hub Btn"
 SigmaHubBtn.Parent = CoreGui
@@ -368,62 +366,46 @@ if getgenv().SettingFarm["Hide UI"] then
     SigmaHubBtn.Enabled = false
 end
 
-ditnhauko.Name = "dit nhau ko"
-ditnhauko.Parent = SigmaHubBtn
-ditnhauko.AnchorPoint = Vector2.new(0.1, 0.1)
-ditnhauko.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ditnhauko.Position = UDim2.new(0, 20, 0.1, -6)
-ditnhauko.Size = UDim2.new(0, 50, 0, 50)
-ditnhauko.Active = true
-ditnhauko.Draggable = true
+ImageButton.Parent = SigmaHubBtn
+ImageButton.Name = "SigmaButton"
+ImageButton.AnchorPoint = Vector2.new(0.1, 0.1)
+ImageButton.Position = UDim2.new(0, 20, 0.1, -6)
+ImageButton.Size = UDim2.new(0, 80, 0, 80)
+ImageButton.BackgroundTransparency = 1
+ImageButton.Image = "rbxassetid://102594724035748"
+ImageButton.ScaleType = Enum.ScaleType.Fit
+ImageButton.Active = true
+ImageButton.Draggable = true
+ImageButton.AutoButtonColor = false
 
-UICornerBtn.CornerRadius = UDim.new(1, 0)
-UICornerBtn.Parent = ditnhauko
+UICorner.CornerRadius = UDim.new(1, 0)
+UICorner.Parent = ImageButton
 
-ImageLabel.Parent = ditnhauko
-ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-ImageLabel.BackgroundTransparency = 1.0
-ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-ImageLabel.Size = UDim2.new(0, 40, 0, 40)
-ImageLabel.Image = "rbxassetid://102594724035748"
+local TweenService = game:GetService("TweenService")
 
-TextButton.Parent = ditnhauko
-TextButton.BackgroundTransparency = 1.0
-TextButton.Size = UDim2.new(1, 0, 1, 0)
-TextButton.Font = Enum.Font.SourceSans
-TextButton.Text = ""
-TextButton.TextColor3 = Color3.fromRGB(27, 42, 53)
+local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
-local zoomedIn = false
-local originalSize = UDim2.new(0, 40, 0, 40)
-local zoomedSize = UDim2.new(0, 30, 0, 30)
-local tweenInfo = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local originalSize = UDim2.new(0, 80, 0, 80)
+local pressedSize = UDim2.new(0, 70, 0, 70)
 
-local faded = false
-local fadeInTween = TweenService:Create(ditnhauko, tweenInfo, {BackgroundTransparency = 0.25})
-local fadeOutTween = TweenService:Create(ditnhauko, tweenInfo, {BackgroundTransparency = 0})
+local pressed = false
 
-TextButton.MouseButton1Down:Connect(function()
-    if zoomedIn then
-        TweenService:Create(ImageLabel, tweenInfo, {Size = originalSize}):Play()
+ImageButton.MouseButton1Down:Connect(function()
+
+    if pressed then
+        TweenService:Create(ImageButton, tweenInfo, {
+            Size = originalSize
+        }):Play()
     else
-        TweenService:Create(ImageLabel, tweenInfo, {Size = zoomedSize}):Play()
+        TweenService:Create(ImageButton, tweenInfo, {
+            Size = pressedSize
+        }):Play()
     end
-    zoomedIn = not zoomedIn
-    
-    if faded then
-        fadeOutTween:Play()
-    else
-        fadeInTween:Play()
-    end
-    faded = not faded
-    
-    if CoinCard.Enabled == false then
-        CoinCard.Enabled = true
-    else
-        CoinCard.Enabled = false
-    end
-    
+
+    pressed = not pressed
+
+    CoinCard.Enabled = not CoinCard.Enabled
+
     if blur.Size == 24 then
         blur.Size = 0
     else
