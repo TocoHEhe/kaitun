@@ -78,16 +78,20 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = player
 local PlaceId = game.PlaceId
 local Enemies = Workspace:WaitForChild("Enemies")
-local Level = LocalPlayer:WaitForChild("Data"):WaitForChild("Level")
-local Fragments = LocalPlayer:WaitForChild("Data"):WaitForChild("Fragments")
-local Beli = LocalPlayer:WaitForChild("Data"):WaitForChild("Beli")
 
--- ===== FPS BOOSTER =====
+-- Đợi Data tải xong an toàn hơn
+local Data = LocalPlayer:WaitForChild("Data", 10)
+local Level, Fragments, Beli
+if Data then
+    Level = Data:WaitForChild("Level", 5)
+    Fragments = Data:WaitForChild("Fragments", 5)
+    Beli = Data:WaitForChild("Beli", 5)
+end
+
+-- ===== FPS BOOSTER (FIXED) =====
 task.spawn(function()
     if getgenv().Configs["FPS Booster"] then
         pcall(function()
-            local effect = ReplicatedStorage:FindFirstChild("Effect")
-            if effect then effect:Destroy() end
             local mainGui = LocalPlayer.PlayerGui:FindFirstChild("Main")
             if mainGui then
                 local settings = mainGui:FindFirstChild("Settings")
@@ -110,35 +114,11 @@ task.wait(2)
 task.spawn(function()
     if getgenv().Configs["FPS Booster"] then
         pcall(function()
-            local enemyList = Workspace:WaitForChild("Enemies")
-            local mapDescendants = (Workspace:WaitForChild("Map")):GetDescendants()
-            for _, descendant in ipairs(mapDescendants) do
-                if descendant:IsA("BasePart") then
-                    local skip = false
-                    for i = 1, 5 do
-                        local plate = Workspace.Map.Jungle.QuestPlates:FindFirstChild("Plate" .. i)
-                        if plate and descendant.Name == "Button" and descendant:IsDescendantOf(plate) then
-                            skip = true
-                            break
-                        end
-                    end
-                    if skip then continue end
-                    if descendant.Name == "Door" and descendant:IsDescendantOf(Workspace.Map.Ice) then continue end
-                    if descendant:IsDescendantOf(Workspace.Map.Jungle:FindFirstChild("Final")) then continue end
-                    if Workspace.Map:FindFirstChild("IceCastle") and descendant:IsDescendantOf(Workspace.Map.IceCastle) then continue end
-                    local nearEnemy = false
-                    for _, enemy in ipairs(enemyList:GetChildren()) do
-                        local hrp = enemy:FindFirstChild("HumanoidRootPart")
-                        if hrp and (hrp.Position - descendant.Position).Magnitude < 10 then
-                            nearEnemy = true
-                            break
-                        end
-                    end
-                    if not nearEnemy then descendant:Destroy() end
-                end
-            end
+            -- [ĐÃ XÓA]: Đoạn code phá hủy các part trong Workspace.Map để tránh lỗi quái rơi xuống vực (Galley Captain)
+            
             local notifications = LocalPlayer.PlayerGui:FindFirstChild("Notifications")
             if notifications then notifications.Enabled = false end
+            
             shared = shared or {}
             if shared.BC_1 == nil then shared.BC_1 = true end
             if shared.BC_1 and shared.BC_2 == nil then
@@ -150,12 +130,15 @@ task.spawn(function()
                 Lighting.GlobalShadows = false
                 Lighting.FogEnd = 9000000000
                 Lighting.Brightness = 0
+                
                 local mainGui = LocalPlayer.PlayerGui:FindFirstChild("Main")
                 local settings = mainGui and mainGui:FindFirstChild("Settings")
                 if settings and settings:FindFirstChild("Rendering") then
                     settings.Rendering.QualityLevel = "Level01"
                     settings.Rendering.GraphicsMode = "NoGraphics"
                 end
+                
+                -- Tối ưu hóa bề mặt thay vì phá hủy vật thể
                 for _, obj in pairs(Workspace:GetDescendants()) do
                     if obj:IsA("BasePart") or obj:IsA("SpawnLocation") or obj:IsA("WedgePart") or obj:IsA("Terrain") or obj:IsA("MeshPart") then
                         obj.Material = Enum.Material.Plastic
@@ -181,6 +164,7 @@ task.spawn(function()
                         obj:Destroy()
                     end
                 end
+                
                 -- Bảo vệ Toco Blur
                 for _, obj in pairs(Lighting:GetDescendants()) do
                     if obj.Name == "Toco Blur" then continue end
@@ -188,6 +172,7 @@ task.spawn(function()
                         obj.Enabled = false
                     end
                 end
+                
                 local character = LocalPlayer.Character
                 if character then
                     for _, obj in pairs(character:GetDescendants()) do
@@ -196,6 +181,8 @@ task.spawn(function()
                         end
                     end
                 end
+                
+                -- Tối ưu hoá effect nhưng an toàn hơn (Giữ lại cơ chế Death)
                 if PlaceId == 2753915549 or PlaceId == 4442272183 or PlaceId == 7449423635 then
                     local effectContainer = ReplicatedStorage:FindFirstChild("Effect")
                     if effectContainer then
@@ -458,7 +445,10 @@ task.spawn(function()
     local ICON_GREEN = "🟢"
     local ICON_OK = "✅"
     local ICON_X = "❌"
+    
+    -- Tránh việc vòng lặp bị dừng nếu chưa tìm thấy data
     repeat task.wait() until LocalPlayer:FindFirstChild("Data") and LocalPlayer.Data:FindFirstChild("Level") and LocalPlayer.Data:FindFirstChild("Beli") and LocalPlayer.Data:FindFirstChild("Fragments")
+    
     while true do
         task.wait(2)
         if CoinCard and CoinCard.Enabled then
